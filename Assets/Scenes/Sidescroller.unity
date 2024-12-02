@@ -1737,8 +1737,8 @@ MonoBehaviour:
   decelerationTime: 0.15
   apexHeight: 4
   apexTime: 0.5
-  groundCheckOffset: 0.595
-  groundCheckSize: {x: 0.6, y: 0.1}
+  groundCheckOffset: 0.6
+  groundCheckSize: {x: 0.5, y: 0.1}
   groundCheckMask:
     serializedVersion: 2
     m_Bits: 8
