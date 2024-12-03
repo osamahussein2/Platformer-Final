@@ -1730,11 +1730,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   body: {fileID: 1433354316}
+  playerSprite: {fileID: 874392359}
   currentState: 0
   previousState: 0
   maxSpeed: 5
   accelerationTime: 0.25
   decelerationTime: 0.15
+  dashCoyoteTime: 1
+  canDashAgain: 1
   apexHeight: 4
   apexTime: 0.5
   groundCheckOffset: 0.6

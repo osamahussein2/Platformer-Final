@@ -13,14 +13,20 @@ public enum PlayerState
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D body;
+    [SerializeField] private SpriteRenderer playerSprite;
     private PlayerDirection currentDirection = PlayerDirection.right;
     public PlayerState currentState = PlayerState.idle;
     public PlayerState previousState = PlayerState.idle;
+
+    private float timer;
 
     [Header("Horizontal")]
     public float maxSpeed = 5f;
     public float accelerationTime = 0.25f;
     public float decelerationTime = 0.15f;
+    public float dashCoyoteTime = 1.0f;
+
+    public bool canDashAgain;
 
     [Header("Vertical")]
     public float apexHeight = 3f;
@@ -51,6 +57,12 @@ public class PlayerController : MonoBehaviour
 
         gravity = -2 * apexHeight / (apexTime * apexTime);
         initialJumpSpeed = 2 * apexHeight / apexTime;
+
+        timer = 0.0f;
+
+        playerSprite.color = Color.white;
+
+        canDashAgain = true;
     }
 
     public void Update()
@@ -124,6 +136,44 @@ public class PlayerController : MonoBehaviour
                 velocity.x += decelerationRate * Time.deltaTime;
                 velocity.x = Mathf.Min(velocity.x, 0);
             }
+        }
+
+        // Increment timer to determine if we reached dash coyote time
+        timer += Time.deltaTime;
+
+        // Make the player dash by pressing X key when they're walking
+        if (Input.GetKeyDown(KeyCode.X) && velocity.x != 0 && canDashAgain)
+        {
+            timer = 0.0f;
+
+            maxSpeed = 10.0f;
+
+            // Make the player sprite less white when dashing
+            playerSprite.color = new Color(0.8f, 0.8f, 0.8f);
+
+            canDashAgain = false;
+        }
+
+        // Make the player dash again when they're walking after timer has exceeded coyote time
+        else if (Input.GetKeyDown(KeyCode.X) && timer >= dashCoyoteTime && velocity.x != 0 && canDashAgain)
+        {
+            timer = 0.0f;
+
+            maxSpeed = 10.0f;
+
+            // Make the player sprite less white when dashing
+            playerSprite.color = new Color(0.8f, 0.8f, 0.8f);
+        }
+
+        // Change the max speed back to default after the time has exceeded coyote time
+        if (timer >= dashCoyoteTime)
+        {
+            canDashAgain = true;
+
+            maxSpeed = 5.0f;
+
+            // Make the player sprite white again when the player isn't dashing anymore
+            playerSprite.color = Color.white;
         }
     }
 
