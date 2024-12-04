@@ -95,7 +95,7 @@ public class PlayerController : MonoBehaviour
             playerInput.y = Input.GetAxisRaw("Vertical");
 
             // Disable gravity
-            gravity = 1.0f;
+            gravity = 0.0f;
         }
 
         if (isDead)
@@ -128,7 +128,7 @@ public class PlayerController : MonoBehaviour
         MovementUpdate(playerInput);
         JumpUpdate();
 
-        if (!isGrounded && !ladderTriggered)
+        if (!isGrounded && !ladderTriggered || !isGrounded && ladderTriggered)
             velocity.y += gravity * Time.deltaTime;
         else if (isGrounded && !ladderTriggered)
             velocity.y = 0;
