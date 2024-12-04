@@ -32,6 +32,8 @@ public class PlayerController : MonoBehaviour
     public float apexHeight = 3f;
     public float apexTime = 0.5f;
 
+    public bool ladderTriggered;
+
     [Header("Ground Checking")]
     public float groundCheckOffset = 0.5f;
     public Vector2 groundCheckSize = new(0.4f, 0.1f);
@@ -63,6 +65,8 @@ public class PlayerController : MonoBehaviour
         playerSprite.color = Color.white;
 
         canDashAgain = true;
+
+        ladderTriggered = false;
     }
 
     public void Update()
@@ -73,6 +77,26 @@ public class PlayerController : MonoBehaviour
 
         Vector2 playerInput = new Vector2();
         playerInput.x = Input.GetAxisRaw("Horizontal");
+
+        // If the player didn't reach the ladder yet
+        if (!ladderTriggered)
+        {
+            // Don't move the player vertically
+            playerInput.y = 0.0f;
+
+            // Make the player fall
+            gravity = -2 * apexHeight / (apexTime * apexTime);
+        }
+
+        // If the player reaches the ladder
+        else if (ladderTriggered)
+        {
+            // Move the player vertically
+            playerInput.y = Input.GetAxisRaw("Vertical");
+
+            // Disable gravity
+            gravity = 1.0f;
+        }
 
         if (isDead)
         {
@@ -104,9 +128,9 @@ public class PlayerController : MonoBehaviour
         MovementUpdate(playerInput);
         JumpUpdate();
 
-        if (!isGrounded)
+        if (!isGrounded && !ladderTriggered)
             velocity.y += gravity * Time.deltaTime;
-        else
+        else if (isGrounded && !ladderTriggered)
             velocity.y = 0;
 
         body.velocity = velocity;
@@ -138,6 +162,13 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        // If the player input is not 0 and we're moving vertically
+        if (playerInput.y != 0)
+        {
+            velocity.y += accelerationRate * playerInput.y * Time.deltaTime;
+            velocity.y = Mathf.Clamp(velocity.y, -maxSpeed, maxSpeed);
+        }
+
         // Increment timer to determine if we reached dash coyote time
         timer += Time.deltaTime;
 
@@ -152,17 +183,6 @@ public class PlayerController : MonoBehaviour
             playerSprite.color = new Color(0.8f, 0.8f, 0.8f);
 
             canDashAgain = false;
-        }
-
-        // Make the player dash again when they're walking after timer has exceeded coyote time
-        else if (Input.GetKeyDown(KeyCode.X) && timer >= dashCoyoteTime && velocity.x != 0 && canDashAgain)
-        {
-            timer = 0.0f;
-
-            maxSpeed = 10.0f;
-
-            // Make the player sprite less white when dashing
-            playerSprite.color = new Color(0.8f, 0.8f, 0.8f);
         }
 
         // Change the max speed back to default after the time has exceeded coyote time
@@ -212,5 +232,32 @@ public class PlayerController : MonoBehaviour
     public PlayerDirection GetFacingDirection()
     {
         return currentDirection;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (collider.gameObject.name == "LadderTilemap")
+        {
+            // If the player on the ladder, set ladder triggered to true
+            ladderTriggered = true;
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D collider)
+    {
+        if (collider.gameObject.name == "LadderTilemap")
+        {
+            // If the player on the ladder, set ladder triggered to true
+            ladderTriggered = true;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collider)
+    {
+        if (collider.gameObject.name == "LadderTilemap")
+        {
+            // If the player exits the ladder trigger, set ladder triggered to false
+            ladderTriggered = false;
+        }
     }
 }
