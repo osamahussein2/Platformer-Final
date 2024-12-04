@@ -50,6 +50,11 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 velocity;
 
+    [Header("Wall Check")]
+    public bool collidedWithLeftWall;
+    public bool collidedWithRightWall;
+    public float wallForce;
+
     public void Start()
     {
         body.gravityScale = 0;
@@ -67,6 +72,11 @@ public class PlayerController : MonoBehaviour
         canDashAgain = true;
 
         ladderTriggered = false;
+
+        collidedWithLeftWall = false;
+        collidedWithRightWall = false;
+
+        wallForce = 1.0f;
     }
 
     public void Update()
@@ -127,6 +137,7 @@ public class PlayerController : MonoBehaviour
 
         MovementUpdate(playerInput);
         JumpUpdate();
+        AddWallForce();
 
         if (!isGrounded && !ladderTriggered || !isGrounded && ladderTriggered)
             velocity.y += gravity * Time.deltaTime;
@@ -145,7 +156,7 @@ public class PlayerController : MonoBehaviour
 
         if (playerInput.x != 0)
         {
-            velocity.x += accelerationRate * playerInput.x * Time.deltaTime;
+            velocity.x += accelerationRate * wallForce * playerInput.x * Time.deltaTime;
             velocity.x = Mathf.Clamp(velocity.x, -maxSpeed, maxSpeed);
         }
         else
@@ -197,6 +208,37 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void AddWallForce()
+    {
+        // LEFT WALL BOOLEAN
+
+        // Disable wall force by setting the wall force to 1
+        if (!collidedWithLeftWall && !collidedWithRightWall)
+        {
+            wallForce = 1.0f;
+        }
+
+        // Enable left wall force by setting the wall force equal to a negative number
+        else if (collidedWithLeftWall && !collidedWithRightWall)
+        {
+            wallForce = -20.0f;
+        }
+
+        // RIGHT WALL BOOLEAN
+
+        // Disable wall force by setting the wall force to 1
+        if (!collidedWithRightWall && !collidedWithLeftWall)
+        {
+            wallForce = 1.0f;
+        }
+
+        // Enable right wall force by setting the wall force equal to a negative number
+        else if (collidedWithRightWall && !collidedWithLeftWall)
+        {
+            wallForce = -20.0f;
+        }
+    }
+
     private void JumpUpdate()
     {
         if (isGrounded && Input.GetButton("Jump"))
@@ -232,6 +274,51 @@ public class PlayerController : MonoBehaviour
     public PlayerDirection GetFacingDirection()
     {
         return currentDirection;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.name == "LeftWallTilemap")
+        {
+            // If the player hits the left wall, add force to it that pushes the player away from the left wall
+            collidedWithLeftWall = true;
+        }
+
+        else if (collision.gameObject.name == "RightWallTilemap")
+        {
+            // If the player hits the right wall, add force to it that pushes the player away from the right wall
+            collidedWithRightWall = true;
+        }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.name == "LeftWallTilemap")
+        {
+            // If the player is still colliding with the left wall, add force to it that pushes the player away from the left wall
+            collidedWithLeftWall = true;
+        }
+
+        else if (collision.gameObject.name == "RightWallTilemap")
+        {
+            // If the player is still colliding with the right wall, add force to it that pushes the player away from the right wall
+            collidedWithRightWall = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.name == "LeftWallTilemap")
+        {
+            // If the player doesn't hit the left wall anymore, disable wall force by setting collided with left wall boolean to false
+            collidedWithLeftWall = false;
+        }
+
+        else if (collision.gameObject.name == "RightWallTilemap")
+        {
+            // If the player doesn't hit the right wall anymore, disable wall force by setting collided with right wall boolean to false
+            collidedWithRightWall = false;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collider)
