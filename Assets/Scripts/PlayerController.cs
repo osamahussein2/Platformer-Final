@@ -18,7 +18,8 @@ public class PlayerController : MonoBehaviour
     public PlayerState currentState = PlayerState.idle;
     public PlayerState previousState = PlayerState.idle;
 
-    private float timer;
+    private float dashTimer;
+    private float jumpTimer;
 
     [Header("Horizontal")]
     public float maxSpeed = 5f;
@@ -31,8 +32,11 @@ public class PlayerController : MonoBehaviour
     [Header("Vertical")]
     public float apexHeight = 3f;
     public float apexTime = 0.5f;
+    public float jumpCoyoteTime = 1.0f;
 
     public bool ladderTriggered;
+
+    public bool canJumpAgain;
 
     [Header("Ground Checking")]
     public float groundCheckOffset = 0.5f;
@@ -65,11 +69,13 @@ public class PlayerController : MonoBehaviour
         gravity = -2 * apexHeight / (apexTime * apexTime);
         initialJumpSpeed = 2 * apexHeight / apexTime;
 
-        timer = 0.0f;
+        dashTimer = 0.0f;
+        jumpTimer = 0.0f;
 
         playerSprite.color = Color.white;
 
         canDashAgain = true;
+        canJumpAgain = true;
 
         ladderTriggered = false;
 
@@ -141,8 +147,12 @@ public class PlayerController : MonoBehaviour
 
         if (!isGrounded && !ladderTriggered || !isGrounded && ladderTriggered)
             velocity.y += gravity * Time.deltaTime;
+
         else if (isGrounded && !ladderTriggered)
+        {
             velocity.y = 0;
+            canJumpAgain = true;
+        }
 
         body.velocity = velocity;
     }
@@ -181,12 +191,12 @@ public class PlayerController : MonoBehaviour
         }
 
         // Increment timer to determine if we reached dash coyote time
-        timer += Time.deltaTime;
+        dashTimer += Time.deltaTime;
 
         // Make the player dash by pressing X key when they're walking
         if (Input.GetKeyDown(KeyCode.X) && velocity.x != 0 && canDashAgain)
         {
-            timer = 0.0f;
+            dashTimer = 0.0f;
 
             maxSpeed = 10.0f;
 
@@ -197,7 +207,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Change the max speed back to default after the time has exceeded coyote time
-        if (timer >= dashCoyoteTime)
+        if (dashTimer >= dashCoyoteTime)
         {
             canDashAgain = true;
 
@@ -241,10 +251,25 @@ public class PlayerController : MonoBehaviour
 
     private void JumpUpdate()
     {
+        jumpTimer += Time.deltaTime;
+
         if (isGrounded && Input.GetButton("Jump"))
         {
             velocity.y = initialJumpSpeed;
             isGrounded = false;
+
+            jumpTimer = 0.0f;
+
+            canJumpAgain = true;
+        }
+
+        else if (!isGrounded && Input.GetButton("Jump") && jumpTimer >= jumpCoyoteTime && canJumpAgain)
+        {
+            velocity.y = initialJumpSpeed;
+
+            jumpTimer = 0.0f;
+
+            canJumpAgain = false;
         }
     }
 
